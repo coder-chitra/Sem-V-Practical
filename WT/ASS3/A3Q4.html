@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sort and Join Array</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #resultOutput {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sort and Join Array</h1>
+    <input type="text" id="arrayInput" placeholder="Enter items separated by commas">
+    <button id="processButton" onclick="sortAndJoin()">Process</button>
+    <div id="resultOutput"></div>
+
+    <script>
+        function sortAndJoin() {
+            const input = document.getElementById('arrayInput').value;
+
+            // Split the input string into an array, trim spaces, and filter out empty items
+            const array = input.split(',').map(item => item.trim()).filter(item => item !== '');
+
+            // Sort the array
+            const sortedArray = array.sort();
+
+            // Join the elements into a string
+            const resultString = sortedArray.join(", ");
+
+            // Display the result
+            document.getElementById('resultOutput').textContent = resultString;
+        }
+    </script>
+</body>
+</html>
+
