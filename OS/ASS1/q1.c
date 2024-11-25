@@ -1,111 +1,119 @@
+/*
+Write a program to implement the simulation of the OS shell. The program
+should accept the command at $ prompt displayed by your shell (myshell$).
+Any normal shell command should be executed from your shell by creating a
+child process corresponding to that command.
+Additionally, it should interpret the following command count:
+
+i. myshell$ count c <filename>
+It will display the number of characters in given file
+ii. myshell$ count w <filename>
+It will display the number of words in given file
+iii. myshell$ count l <filename>
+It will display the number of lines in given file
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
-void count_characters(const char *filename) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        // Child process
-        execlp("wc", "wc", "-c", filename, NULL);
-        perror("execlp failed"); // This executes only if execlp fails
-        exit(1);
-    } else if (pid > 0) {
-        // Parent process
-        wait(NULL); // Wait for the child process to complete
-    } else {
-        perror("fork failed");
+void count(char c, char *fn)
+{
+    int lc = 0, wc = 0, cc = 0;
+    FILE *fp;
+    char ch;
+    if ((fp = fopen(fn, "r")) == NULL)
+    {
+        printf("File %s not found\n", fn);
+        return;
     }
-}
-
-void count_words(const char *filename) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        // Child process
-        execlp("wc", "wc", "-w", filename, NULL);
-        perror("execlp failed"); // This executes only if execlp fails
-        exit(1);
-    } else if (pid > 0) {
-        // Parent process
-        wait(NULL); // Wait for the child process to complete
-    } else {
-        perror("fork failed");
-    }
-}
-
-void count_lines(const char *filename) {
-    pid_t pid = fork();
-    if (pid == 0) {
-        // Child process
-        execlp("wc", "wc", "-l", filename, NULL);
-        perror("execlp failed"); // This executes only if execlp fails
-        exit(1);
-    } else if (pid > 0) {
-        // Parent process
-        wait(NULL); // Wait for the child process to complete
-    } else {
-        perror("fork failed");
-    }
-}
-
-void execute_command(char *input) {
-    char command[10], option[10], filename[100];
-    int num_args = sscanf(input, "%s %s %s", command, option, filename);
-
-    if (num_args == 3 && strcmp(command, "count") == 0) {
-        if (strcmp(option, "c") == 0) {
-            printf("Number of characters in %s:\n", filename);
-            count_characters(filename);
-        } else if (strcmp(option, "w") == 0) {
-            printf("Number of words in %s:\n", filename);
-            count_words(filename);
-        } else if (strcmp(option, "l") == 0) {
-            printf("Number of lines in %s:\n", filename);
-            count_lines(filename);
-        } else {
-            printf("Invalid option for count command. Use 'c', 'w', or 'l'.\n");
+    while ((ch = fgetc(fp)) != EOF)
+    {
+        if (ch == '\n')
+        {
+            lc++;
+            cc++;
+            wc++;
         }
-    } else {
-        // For other shell commands, create a child process and execute them
-        pid_t pid = fork();
-        if (pid == 0) {
-            // Child process
-            char *args[] = {"/bin/sh", "-c", input, NULL};
-            execvp(args[0], args); // Execute the command
-            perror("execvp failed");
-            exit(1);
-        } else if (pid > 0) {
-            // Parent process
-            wait(NULL); // Wait for the child process to complete
-        } else {
-            perror("fork failed");
+        else if (ch == ' ')
+        {
+            wc++;
+            cc++;
+        }
+        else
+        {
+            cc++;
         }
     }
+    printf("Character count is %d\n", cc);
+    fclose(fp);
+    switch (c)
+    {
+    case 'c':
+        printf("Total No.of Characters = %d\n", cc);
+        break;
+    case 'w':
+        printf("Total No.of Words = %d\n", wc);
+        break;
+    case 'l':
+        printf("Total No.of Lines = %d\n", lc);
+        break;
+    }
 }
 
-int main() {
-    char input[200];
-
-    while (1) {
-        printf("myshell$ ");
-        if (fgets(input, sizeof(input), stdin) == NULL) {
-            break; // Exit on EOF
+int main()
+{
+    char command[80], t1[20], t2[20], t3[20], t4[20];
+    int n;
+    system("clear");
+    while (1)
+    {
+        printf("myShell$");
+        fflush(stdin);
+        fgets(command, 80, stdin);
+        n = sscanf(command, "%s %s %s %s", t1, t2, t3, t4);
+        if (strcmp(t1, "exit") == 0)
+        {
+            printf("Exiting $myshell............\n");
+            return 0;
         }
-
-        // Remove trailing newline character
-        input[strcspn(input, "\n")] = '\0';
-
-        // Exit shell if the command is "exit"
-        if (strcmp(input, "exit") == 0) {
+        switch (n)
+        {
+        case 1:
+            if (!fork())
+            {
+                execlp(t1, t1, NULL);
+                perror(t1);
+            }
             break;
+        case 2:
+            if (!fork())
+            {
+                execlp(t1, t1, t2, NULL);
+                perror(t1);
+            }
+            break;
+        case 3:
+            if (strcmp(t1, "count") == 0)
+                count(t2[0], t3);
+            else
+            {
+                if (!fork())
+                {
+                    execlp(t1, t1, t2, t3, NULL);
+                    perror(t1);
+                }
+            }
+            break;
+        case 4:
+            if (!fork())
+            {
+                execlp(t1, t1, t2, t3, t4, NULL);
+                perror(t1);
+            }
         }
-
-        // Execute the entered command
-        execute_command(input);
     }
 
-    printf("Exiting myshell.\n");
     return 0;
 }
